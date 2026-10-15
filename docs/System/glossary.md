@@ -20,14 +20,14 @@ Example:
 **Aliases (deprecated):** Client, Account holder.
 -->
 
-### easySpotDL
+### EasySpotDL
 
-**Definition:** A portable desktop app for macOS (Apple Silicon) and Windows 11 that sets up and updates the Engine for non-technical users and gives them a window to download a Public Playlist as MP3 files. easySpotDL does not download music itself.
+**Definition:** A portable desktop app for macOS (Apple Silicon) and Windows 11 that sets up and updates the Engine for non-technical users and gives them a window to download a Public Playlist as MP3 files. EasySpotDL does not download music itself.
 **Not to be confused with:** Engine.
 
 ### Public Playlist
 
-**Definition:** A Spotify playlist that anyone with its link can open without signing in. It is the only input easySpotDL accepts; private playlists and saved tracks are out of scope.
+**Definition:** A Spotify playlist that anyone with its link can open without signing in. It is the only input EasySpotDL accepts; private playlists and saved tracks are out of scope.
 
 ---
 
@@ -45,16 +45,16 @@ Example:
 
 ### Engine
 
-**Definition:** spotDL plus the tools it depends on (yt-dlp, ffmpeg, deno). easySpotDL downloads it into the user's folder on first launch and updates it automatically on every launch. The Engine is what actually downloads the music.
-**Not to be confused with:** easySpotDL.
+**Definition:** spotDL plus the tools it depends on (yt-dlp, ffmpeg, deno). EasySpotDL downloads it into the user's folder on first launch and updates it automatically on every launch. The Engine is what actually downloads the music.
+**Not to be confused with:** EasySpotDL.
 
 ### Release Channel
 
-**Definition:** The public location on GitHub where new easySpotDL versions are published and which easySpotDL checks on launch. It covers easySpotDL only, never the Engine.
+**Definition:** The public location on GitHub where new EasySpotDL versions are published and which EasySpotDL checks on launch. It covers EasySpotDL only, never the Engine.
 
 ### Version Notice
 
-**Definition:** The message easySpotDL shows on launch when the Release Channel has a newer version, with a link to download it. easySpotDL never replaces itself; the user updates it manually.
+**Definition:** The message EasySpotDL shows on launch when the Release Channel has a newer version, with a link to download it. EasySpotDL never replaces itself; the user updates it manually.
 
 ---
 
@@ -67,3 +67,5 @@ Example:
 
 - ~~Client~~ — replaced by [Customer](#customer) on 2026-01-15.
 -->
+
+- ~~easySpotDL~~ — renamed to [EasySpotDL](#easyspotdl) (casing aligned with the repository name) on 2026-10-15.
