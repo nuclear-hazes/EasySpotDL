@@ -20,6 +20,15 @@ Example:
 **Aliases (deprecated):** Client, Account holder.
 -->
 
+### easySpotDL
+
+**Definition:** A portable desktop app for macOS (Apple Silicon) and Windows 11 that sets up and updates the Engine for non-technical users and gives them a window to download a Public Playlist as MP3 files. easySpotDL does not download music itself.
+**Not to be confused with:** Engine.
+
+### Public Playlist
+
+**Definition:** A Spotify playlist that anyone with its link can open without signing in. It is the only input easySpotDL accepts; private playlists and saved tracks are out of scope.
+
 ---
 
 ## System Terms
@@ -33,6 +42,19 @@ Example:
 
 **Definition:** The sequence of stages that pulls raw events from external sources, normalises them, and writes to the event store. Owned by the data platform team.
 -->
+
+### Engine
+
+**Definition:** spotDL plus the tools it depends on (yt-dlp, ffmpeg, deno). easySpotDL downloads it into the user's folder on first launch and updates it automatically on every launch. The Engine is what actually downloads the music.
+**Not to be confused with:** easySpotDL.
+
+### Release Channel
+
+**Definition:** The public location on GitHub where new easySpotDL versions are published and which easySpotDL checks on launch. It covers easySpotDL only, never the Engine.
+
+### Version Notice
+
+**Definition:** The message easySpotDL shows on launch when the Release Channel has a newer version, with a link to download it. easySpotDL never replaces itself; the user updates it manually.
 
 ---
 

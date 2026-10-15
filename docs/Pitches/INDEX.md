@@ -12,6 +12,8 @@ A pitch ends in one of three ways: promoted to a Task, promoted to a Project, or
 
 <!-- Pitches still being shaped or awaiting promotion decision. -->
 
+- [I-0001](I-0001.md) — easySpotDL — Portable Mac/Windows app that wraps spotDL so non-technical swimmers can turn a Public Playlist into MP3s — 2026-10-13
+
 ---
 
 ## Promoted
