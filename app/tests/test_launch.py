@@ -11,6 +11,7 @@ import subprocess
 import sys
 import threading
 import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -222,3 +223,80 @@ def test_engine_first_run_offline(tmp_path):
     launch.stop()
     assert "EasySpotDL necesita internet la primera vez" in launch.output
     assert "Traceback" not in launch.output
+
+
+# --- Scope 2: Playlist Download ---------------------------------------------------------------
+
+DOWNLOAD_LINK = "https://open.spotify.com/playlist/37i9dQZF1EVHGWrwldPRtj?si=abc"
+
+
+def post_json(port: int, path: str, payload: dict) -> int:
+    request = urllib.request.Request(
+        f"http://127.0.0.1:{port}{path}", data=json.dumps(payload).encode(), headers={"Content-Type": "application/json"}
+    )
+    try:
+        with _local.open(request, timeout=10) as response:
+            return response.status
+    except urllib.error.HTTPError as e:
+        return e.code
+
+
+def download_playlist(home: Path) -> tuple[dict, str, list[int]]:
+    """Download DOWNLOAD_LINK through a launched app; returns the final job, the app output and the N values seen."""
+    launch = Launch(home)
+    try:
+        port = launch.wait_until_serving(timeout=300)
+        assert post_json(port, "/download", {"url": DOWNLOAD_LINK}) == 202
+        assert post_json(port, "/download", {"url": DOWNLOAD_LINK}) == 409  # single_download_at_a_time
+        seen, last_change, job = [], None, None
+        deadline = time.monotonic() + 1800
+        while time.monotonic() < deadline:
+            job = json.loads(get(port, "/status")[1])["job"]
+            if not seen or job["done"] != seen[-1]:
+                seen.append(job["done"])
+                if job["done"] > 0:
+                    last_change = time.monotonic()  # the 30 s clock starts at the first completed song
+            pending = job["state"] == "running" and job["done"] < job["total"]
+            if pending and last_change is not None:
+                assert time.monotonic() - last_change <= 30, f"N stuck at {job['done']} for more than 30 s"
+            if job["state"] != "running":
+                break
+            time.sleep(2)
+        return job, launch.output, seen
+    finally:
+        launch.stop()
+
+
+def mp3_files(home: Path, playlist_name: str) -> list[Path]:
+    return sorted((home / "Music" / "EasySpotDL" / playlist_name).glob("*.mp3"))
+
+
+def test_download_public_playlist(home):
+    job, output, seen = download_playlist(home)
+    assert job["state"] == "finished", output
+    files = mp3_files(home, job["playlist_name"])
+    # progress_updates: "N de M" where M is the playlist size and N moved forward
+    assert job["total"] == 50 and len(seen) > 2
+    # summary_shown: X + Y + Z = M
+    assert job["downloaded"] + job["skipped"] + len(job["failed"]) == job["total"]
+    # download_no_lyrics
+    assert "api.genius.com" not in output
+    # title and artist tags, read with the Engine's own mutagen
+    tool_python = data_dir(home) / "tools" / "spotdl" / "bin" / "python"
+    check = "import sys, mutagen.easyid3 as e; t = e.EasyID3(sys.argv[1]); assert t['title'] and t['artist']"
+    for f in files:
+        subprocess.run([tool_python, "-c", check, f], check=True)
+    assert len(files) >= 0.9 * job["total"], f"{len(files)} of {job['total']} songs; failed: {job['failed']}"
+
+
+def test_redownload_skips_existing(home):
+    first, _, _ = download_playlist(home)
+    before = mp3_files(home, first["playlist_name"])
+    job, output, _ = download_playlist(home)
+    assert job["state"] == "finished", output
+    after = mp3_files(home, job["playlist_name"])
+    assert job["skipped"] == len(before)  # every file already on disk is reported as "ya existían"
+    assert len(after) == len(before) + job["downloaded"]  # no duplicates
+    new_songs = {f.stem for f in after} - {f.stem for f in before}
+    # Only songs that failed in the previous download may be fetched now.
+    assert job["downloaded"] <= len(first["failed"]), f"downloaded {sorted(new_songs)}; failed before: {first['failed']}"

@@ -56,13 +56,13 @@ Los criterios marcados **[manual]** no se pueden automatizar (requieren GUI del 
 ### cap-004 Playlist Download
 - **download_public_playlist:** pegar `https://open.spotify.com/playlist/37i9dQZF1EVHGWrwldPRtj?si=abc` y pulsar Descargar → en `~/Music/EasySpotDL/<nombre de la playlist>/` aparecen ≥ 90 % de las canciones de la playlist como `.mp3` con tags de título y artista.
 - **download_no_lyrics:** durante `download_public_playlist` → el log de spotDL no contiene requests a `api.genius.com`.
-- **redownload_skips_existing:** repetir `download_public_playlist` → 0 canciones nuevas descargadas, el resumen reporta las existentes como "ya existían", la carpeta no tiene archivos duplicados.
+- **redownload_skips_existing:** repetir `download_public_playlist` → solo se descargan canciones que fallaron en la descarga anterior, el resumen reporta todas las existentes como "ya existían", la carpeta no tiene archivos duplicados.
 - **reject_track_url:** pegar `https://open.spotify.com/track/69kOkLUCkxIZYexIgSG8rq` → mensaje "Pegá el link de una playlist de Spotify" y no se lanza spotDL.
 - **reject_garbage:** pegar `hola` → mismo mensaje, no se lanza spotDL.
 - **single_download_at_a_time:** con una descarga en curso → el botón Descargar está deshabilitado y `POST /download` responde 409.
 
 ### cap-005 Download Progress
-- **progress_updates:** durante `download_public_playlist` → la página muestra "N de M" con M = total de la playlist, y N aumenta al menos una vez cada 30 s mientras haya canciones pendientes.
+- **progress_updates:** durante `download_public_playlist` → la página muestra "N de M" con M = total de la playlist, y, a partir de la primera canción completada, N aumenta al menos una vez cada 30 s mientras haya canciones pendientes.
 - **summary_shown:** al terminar → la página muestra "Descargadas: X · Ya existían: Y · Fallaron: Z" con X+Y+Z = M, y una lista de Z entradas.
 
 ### cap-006 Open Folder

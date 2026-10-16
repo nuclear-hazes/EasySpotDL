@@ -53,4 +53,4 @@ EasySpotDL is a portable desktop app (macOS Apple Silicon, Windows 11) that lets
 
 ## Current State
 
-Spec complete for P-0001 (EasySpotDL v0.1.0); no code yet. A spike on 2026-10-15 validated spotDL 4.5.2 end to end on macOS (49/50 songs from a Public Playlist). Next: Scope 1 (launch + Engine).
+P-0001 (EasySpotDL v0.1.0) in progress: Scope 1 (launch + Engine) merged to `dev`; Scope 2 (download window) implemented, manual `open_folder` check pending. Next: Scope 3 (Version Notice + packaging).
