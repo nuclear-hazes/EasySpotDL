@@ -9,6 +9,7 @@ from easyspotdl import engine
 @pytest.fixture
 def data_dir(tmp_path, monkeypatch):
     monkeypatch.setenv("HOME", str(tmp_path))  # ~/.spotdl lives under the fake home
+    monkeypatch.setenv("PATH", str(tmp_path / "path"))  # hide the machine's own ffmpeg/deno
     monkeypatch.setenv("UV", "/fake/uv")
     monkeypatch.setattr(engine, "_spotdl_version", lambda spotdl: "4.5.2")
     return tmp_path / "data"
@@ -85,6 +86,18 @@ def test_update_restores_missing_tool(data_dir, calls, monkeypatch, tmp_path):
     monkeypatch.setattr(engine, "has_internet", lambda: True)
     engine.ensure_engine(data_dir)
     assert [cmd[-1] for cmd, _ in calls] == ["spotdl", "--download-deno"]
+
+
+def test_tools_on_path_are_not_downloaded(data_dir, calls, monkeypatch, tmp_path):
+    # spotDL prompts "already installed" for a tool on PATH and fails without a terminal to answer.
+    path_dir = tmp_path / "path"
+    path_dir.mkdir()
+    ffmpeg = path_dir / f"ffmpeg{engine.EXE}"
+    ffmpeg.touch()
+    ffmpeg.chmod(0o755)
+    monkeypatch.setattr(engine, "has_internet", lambda: True)
+    engine.ensure_engine(data_dir)
+    assert [cmd[-1] for cmd, _ in calls] == ["3.12", "--download-deno"]
 
 
 def test_update_offline_is_skipped_with_warning(data_dir, calls, monkeypatch, caplog):
