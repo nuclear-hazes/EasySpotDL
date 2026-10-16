@@ -2,3 +2,14 @@
 .deploy-secrets
 docs/local/
 .DS_Store
+
+# uv binaries (downloaded for dev and by scripts/build.sh)
+/uv
+/uv.exe
+/dist/
+
+# Python
+__pycache__/
+.venv/
+.pytest_cache/
+*.egg-info/
