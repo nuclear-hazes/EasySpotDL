@@ -300,3 +300,61 @@ def test_redownload_skips_existing(home):
     new_songs = {f.stem for f in after} - {f.stem for f in before}
     # Only songs that failed in the previous download may be fetched now.
     assert job["downloaded"] <= len(first["failed"]), f"downloaded {sorted(new_songs)}; failed before: {first['failed']}"
+
+
+# --- Scope 3: Version Notice ------------------------------------------------------------------
+
+
+def wait_for_status(port: int, predicate, timeout: float = 15) -> dict:
+    deadline = time.monotonic() + timeout
+    status = {}
+    while time.monotonic() < deadline:
+        status = json.loads(get(port, "/status")[1])
+        if predicate(status):
+            break
+        time.sleep(0.25)
+    return status
+
+
+def release_channel_file(tmp_path: Path, tag: str) -> str:
+    path = tmp_path / "latest.json"
+    path.write_text(json.dumps({"tag_name": tag, "html_url": f"https://github.com/nuclear-hazes/EasySpotDL/releases/tag/{tag}"}))
+    return path.as_uri()
+
+
+def test_notice_newer_version(home, tmp_path):
+    launch = Launch(home, {"DEV_RELEASE_CHANNEL_URL": release_channel_file(tmp_path, "v0.2.0")})
+    try:
+        port = launch.wait_until_serving(timeout=120)
+        status = wait_for_status(port, lambda s: s["version_notice"])
+        assert status["app_version"] == "0.1.0"
+        assert status["version_notice"] == {
+            "version": "0.2.0",
+            "html_url": "https://github.com/nuclear-hazes/EasySpotDL/releases/tag/v0.2.0",
+        }
+    finally:
+        launch.stop()
+
+
+def test_notice_same_version(home, tmp_path):
+    launch = Launch(home, {"DEV_RELEASE_CHANNEL_URL": release_channel_file(tmp_path, "v0.1.0")})
+    try:
+        port = launch.wait_until_serving(timeout=120)
+        time.sleep(3)  # the check runs in the background right after launch
+        assert "Release Channel: latest 0.1.0" in launch.output
+        assert json.loads(get(port, "/status")[1])["version_notice"] is None
+    finally:
+        launch.stop()
+
+
+def test_notice_channel_unreachable(home):
+    launch = Launch(home, {"DEV_RELEASE_CHANNEL_URL": "http://127.0.0.1:9/releases/latest"})
+    try:
+        port = launch.wait_until_serving(timeout=120)
+        time.sleep(3)
+        assert "[WARNING] release_channel: Release Channel check failed" in launch.output
+        status, body = get(port)
+        assert status == 200 and "EasySpotDL" in body  # the app works
+        assert json.loads(get(port, "/status")[1])["version_notice"] is None
+    finally:
+        launch.stop()

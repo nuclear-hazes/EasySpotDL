@@ -1,0 +1,88 @@
+EasySpotDL
+==========
+
+EasySpotDL convierte una playlist pública de Spotify en archivos MP3, para
+reproductores que solo leen MP3 (por ejemplo, auriculares para nadar).
+
+Necesitás internet. La primera vez tarda unos minutos más, porque EasySpotDL
+se prepara solo: descarga unos 150 MB y ocupa unos 450 MB en el disco.
+
+
+Mac
+---
+
+Funciona en Mac con chip Apple (M1 o más nuevo).
+
+1. Hacé doble clic en el archivo .zip que descargaste. Aparece una carpeta
+   llamada EasySpotDL. Podés moverla a donde quieras (por ejemplo, a
+   Aplicaciones o al Escritorio).
+2. Abrí la carpeta y hacé doble clic en "Abrir EasySpotDL.command".
+3. La primera vez, la Mac avisa que no puede verificar el archivo y no lo
+   abre. Es normal: EasySpotDL no está firmado por Apple. Tocá "Listo".
+4. Abrí Configuración del Sistema > Privacidad y seguridad. Bajá hasta el
+   aviso sobre "Abrir EasySpotDL.command" y tocá "Abrir igualmente".
+   Confirmá con tu contraseña o Touch ID.
+5. Volvé a hacer doble clic en "Abrir EasySpotDL.command". Esto se hace una
+   sola vez; las próximas veces abre directo.
+
+Se abre una ventana de Terminal y, después, tu navegador con EasySpotDL.
+No cierres la ventana de Terminal mientras lo uses: cerrarla apaga
+EasySpotDL.
+
+
+Windows
+-------
+
+Funciona en Windows 11.
+
+1. Hacé clic derecho en el archivo .zip que descargaste y elegí
+   "Extraer todo". No lo abras desde adentro del .zip sin extraerlo.
+2. Abrí la carpeta EasySpotDL que se creó y hacé doble clic en
+   "Abrir EasySpotDL.bat".
+3. La primera vez aparece "Windows protegió su PC". Es normal: EasySpotDL
+   no está firmado. Tocá "Más información" y después "Ejecutar de todas
+   formas".
+
+Se abre una ventana negra y, después, tu navegador con EasySpotDL.
+No cierres la ventana negra mientras lo uses: cerrarla apaga EasySpotDL.
+
+
+Cómo se usa
+-----------
+
+1. En Spotify, abrí la playlist y copiá su link: en el celular, "..." >
+   Compartir > Copiar enlace; en la computadora, "..." > Compartir >
+   Copiar enlace de la playlist. La playlist tiene que ser pública.
+2. Pegá el link en EasySpotDL y tocá "Descargar".
+3. Esperá a que termine. Una playlist de 50 canciones tarda entre 10 y 15 minutos.
+4. Tocá "Abrir carpeta" para ver los MP3 y copialos a tu reproductor.
+
+Si volvés a descargar la misma playlist, EasySpotDL solo baja las canciones
+que todavía no tenés.
+
+
+Dónde quedan los MP3
+--------------------
+
+En tu carpeta Música, dentro de EasySpotDL, en una carpeta con el nombre de
+la playlist:
+
+  Mac:      Música > EasySpotDL > (nombre de la playlist)
+  Windows:  C:\Users\(tu usuario)\Music\EasySpotDL\(nombre de la playlist)
+
+
+Si algo falla
+-------------
+
+- Cerrá la ventana de Terminal (Mac) o la ventana negra (Windows) y volvé a
+  abrir EasySpotDL. Al abrirse, se actualiza solo.
+- Revisá que tengas internet, sobre todo la primera vez.
+- Revisá que la playlist sea pública y que el link sea de una playlist (no
+  de una canción ni de un álbum).
+- Algunas canciones pueden no bajarse: EasySpotDL te muestra cuáles al
+  terminar. Probá descargar la playlist de nuevo más tarde; solo va a
+  intentar las que faltan.
+- Si EasySpotDL muestra "Hay una nueva versión", tocá el link, descargá la
+  versión nueva y usala en lugar de esta.
+- Si sigue sin funcionar, sacale una foto a la ventana de Terminal o a la
+  ventana negra y mandásela a quien te pasó EasySpotDL.
