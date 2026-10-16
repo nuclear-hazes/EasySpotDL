@@ -1,39 +1,41 @@
-# System: MediaExtracter
-
-> **Setup:** Fill in every section. Delete these instruction lines once done.
-> Keep this file under ~150 lines. Detail belongs in P/T/I files and their index files.
-> Do NOT list individual projects, tasks, or pitches here — those live in INDEX.md files.
-> Do NOT inline deployment targets or credentials — this file is public-repo safe.
+# System: EasySpotDL
 
 ## What This System Does
 
-[2–4 sentences describing the system's purpose and main components]
+EasySpotDL is a portable desktop app (macOS Apple Silicon, Windows 11) that lets non-technical users turn a Spotify Public Playlist into MP3 files for MP3-only devices (e.g. swimming headphones). It wraps spotDL (the Engine) instead of reimplementing any download logic: a launcher starts a local web page, the app keeps the Engine installed and updated, and it shows a Version Notice when the Release Channel has a newer EasySpotDL.
 
 ## Stack
 
-- **Language:** [e.g., Python 3.12, TypeScript 5.x]
-- **Framework:** [e.g., FastAPI, Next.js, None]
-- **Database:** [e.g., PostgreSQL 16, SQLite, None]
-- **Infrastructure:** [e.g., Docker on homeserver, Railway, bare metal]
+- **Language:** Python 3.12 (managed by a bundled standalone `uv` binary; never the system Python)
+- **Framework:** FastAPI + uvicorn serving a single static HTML page (vanilla JS)
+- **Database:** None (in-memory state; MP3 files are the only persistent output)
+- **Infrastructure:** Runs locally on the user's machine; distributed as zip files on GitHub Releases (`nuclear-hazes/EasySpotDL`)
 
 ## Architecture Principles
 
-- [Key decision that must be respected, e.g., "API-first: all features exposed via REST before UI"]
-- [Another constraint, e.g., "Single Postgres database — no secondary datastores"]
+- Never reimplement download, search, matching or conversion: that belongs to the Engine (spotDL).
+- No compilation or native packaging: the zip ships `uv` + source; `uv` installs everything else into the user's data folder.
+- Zero credentials: no Spotify, YouTube or GitHub secrets anywhere in the app.
+- Do not bundle third-party binaries (ffmpeg, deno, Python) in the zip; they are fetched at runtime.
+- Server binds to `127.0.0.1` only.
 
 ## Cross-Project Constraints
 
-- [Constraint that applies to every project, e.g., "All auth uses JWT via auth-service"]
+- Engine invocation must disable lyrics lookup and requires deno (see `MEMORY.md`).
+- User-facing text is Spanish; code, identifiers and glossary are English.
 
 ## Subsystems / Components
 
-- [Named subsystem 1] — [one-line description]
-- [Named subsystem 2] — [one-line description]
-<!-- This list is what the "touches multiple subsystems" promotion trigger checks against. Keep names stable. -->
+- Launcher — per-platform double-click scripts that run `uv` and start the app
+- Engine Manager — installs and updates the Engine (`engine.py`)
+- Download Service — validates Public Playlist links, runs spotDL, tracks progress (`download.py`)
+- Web UI — local server and single page (`server.py`, `static/index.html`)
+- Release Checker — queries the Release Channel and builds the Version Notice (`release_channel.py`)
+- Packaging — builds the distributable zips (`scripts/build.sh`)
 
 ## Logging
 
-- **Framework:** [e.g., Python `logging`, Node.js `winston`]
+- **Framework:** Python `logging`, to stdout (the visible terminal/console window)
 - **Format:** `YYYY-MM-DD HH:MM:SS [LEVEL] module: message`
 - **dev level:** DEBUG | **prod level:** WARNING
 
@@ -51,4 +53,4 @@
 
 ## Current State
 
-[1–3 sentences on where the project is right now — what's working, what's in progress, what's next.]
+P-0001 (EasySpotDL v0.1.0) in progress: Scopes 1 and 2 done; Scope 3 open until the Windows 11 end-to-end run passes. v0.1.0 is published on the Release Channel with the macOS zip only (approved exception); the Windows zip is added to the same Release once tested. Build with `scripts/build.sh`.
