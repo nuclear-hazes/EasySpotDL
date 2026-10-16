@@ -53,4 +53,4 @@ EasySpotDL is a portable desktop app (macOS Apple Silicon, Windows 11) that lets
 
 ## Current State
 
-P-0001 (EasySpotDL v0.1.0) in progress: Scope 1 (launch + Engine) merged to `dev`; Scope 2 (download window) implemented, manual `open_folder` check pending. Next: Scope 3 (Version Notice + packaging).
+P-0001 (EasySpotDL v0.1.0) in progress: all three scopes implemented and tested on macOS. Pending manual checks: Gatekeeper approval (Scope 1), `open_folder` (Scope 2) and the Windows 11 end-to-end run (Scope 3). Build with `scripts/build.sh`.

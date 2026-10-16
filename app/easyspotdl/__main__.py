@@ -13,7 +13,7 @@ from pathlib import Path
 
 import uvicorn
 
-from . import config, download, engine, server
+from . import config, download, engine, release_channel, server
 
 log = logging.getLogger(__name__)
 
@@ -95,12 +95,15 @@ def main() -> int:
         log.error("%s", e)
         return 1
 
+    release = release_channel.ReleaseChecker(cfg.release_channel_url, cfg.version)
+    release.start()
+
     sock = bind_socket(cfg.preferred_port)
     port = sock.getsockname()[1]
     instance_file = cfg.data_dir / INSTANCE_FILE
     instance_file.write_text(json.dumps({"port": port, "pid": os.getpid()}))
     downloads = download.DownloadService(engine.spotdl_path(cfg.data_dir), cfg.music_dir)
-    app = server.create_app(cfg, engine_status, downloads)
+    app = server.create_app(cfg, engine_status, downloads, release)
     srv = uvicorn.Server(uvicorn.Config(app, log_config=None, access_log=False))
     threading.Thread(target=_open_browser_when_started, args=(srv, url_for(port)), daemon=True).start()
     try:

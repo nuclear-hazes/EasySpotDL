@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 
 from easyspotdl import config, download, server
 from easyspotdl.engine import EngineStatus
+from easyspotdl.release_channel import ReleaseChecker, VersionNotice
 
 PLAYLIST = "https://open.spotify.com/playlist/37i9dQZF1EVHGWrwldPRtj"
 
@@ -37,7 +38,12 @@ def downloads():
 
 
 @pytest.fixture
-def client(tmp_path, downloads):
+def release():
+    return ReleaseChecker(url=None, current="0.1.0")  # never started: tests set .notice directly
+
+
+@pytest.fixture
+def client(tmp_path, downloads, release):
     cfg = config.AppConfig(
         env="dev",
         version="0.1.0",
@@ -48,7 +54,7 @@ def client(tmp_path, downloads):
         log_level=logging.DEBUG,
     )
     engine_status = EngineStatus(installed=True, spotdl_version="4.5.2", updated_this_launch=True)
-    return TestClient(server.create_app(cfg, engine_status, downloads), base_url="http://127.0.0.1")
+    return TestClient(server.create_app(cfg, engine_status, downloads, release), base_url="http://127.0.0.1")
 
 
 def test_index_serves_page(client):
@@ -69,6 +75,21 @@ def test_status_without_job(client):
         "version_notice": None,
         "job": None,
     }
+
+
+def test_status_includes_version_notice(client, release):
+    release.notice = VersionNotice(version="0.2.0", html_url="https://github.com/nuclear-hazes/EasySpotDL/releases/tag/v0.2.0")
+    assert client.get("/status").json()["version_notice"] == {
+        "version": "0.2.0",
+        "html_url": "https://github.com/nuclear-hazes/EasySpotDL/releases/tag/v0.2.0",
+    }
+
+
+def test_page_has_version_notice_text(client):
+    # The banner reads "Hay una nueva versión de EasySpotDL (<version>)." with a link to html_url.
+    page = client.get("/").text
+    assert 'Hay una nueva versión de EasySpotDL (<span id="notice-version"></span>).' in page
+    assert 'id="notice-link"' in page
 
 
 def test_download_starts_with_clean_url(client, downloads):

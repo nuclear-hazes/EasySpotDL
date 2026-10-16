@@ -26,6 +26,8 @@
     .row { display: flex; justify-content: space-between; gap: 1rem; }
     h2 { font-size: 1.15rem; margin: 0; }
     ul { padding-left: 1.2rem; }
+    .notice { border: 1px solid var(--accent); border-radius: .5rem; padding: .75rem 1rem; margin-bottom: 1.5rem; }
+    .notice a { color: inherit; font-weight: 600; }
     [hidden] { display: none !important; }
   </style>
 </head>
@@ -34,6 +36,12 @@
     <h1>EasySpotDL</h1>
     <span class="muted" id="version"></span>
   </header>
+
+  <!-- Version Notice: solo si el Release Channel tiene una versión más nueva -->
+  <p class="notice" id="notice" hidden>
+    Hay una nueva versión de EasySpotDL (<span id="notice-version"></span>).
+    <a id="notice-link" target="_blank" rel="noopener">Descargala acá</a>
+  </p>
 
   <!-- Pantalla: inicio -->
   <section id="screen-start">
@@ -84,6 +92,12 @@
 
     function render(status) {
       $("version").textContent = "v" + status.app_version;
+      const notice = status.version_notice;
+      $("notice").hidden = !notice;
+      if (notice) {
+        $("notice-version").textContent = notice.version;
+        $("notice-link").href = notice.html_url;
+      }
       const job = status.job;
       if (job && job.state === "running") {
         show("running");

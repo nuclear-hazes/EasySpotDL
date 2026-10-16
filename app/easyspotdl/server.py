@@ -1,5 +1,6 @@
 """Web UI: the local FastAPI server and its single page."""
 
+from dataclasses import asdict
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request, Response
@@ -10,6 +11,7 @@ from pydantic import BaseModel
 from .config import AppConfig
 from .download import DownloadInProgress, DownloadService, InvalidLink
 from .engine import EngineStatus
+from .release_channel import ReleaseChecker
 
 STATIC_DIR = Path(__file__).parent / "static"
 APP_NAME = "EasySpotDL"
@@ -19,7 +21,9 @@ class DownloadRequest(BaseModel):
     url: str
 
 
-def create_app(cfg: AppConfig, engine_status: EngineStatus, downloads: DownloadService) -> FastAPI:
+def create_app(
+    cfg: AppConfig, engine_status: EngineStatus, downloads: DownloadService, release: ReleaseChecker
+) -> FastAPI:
     # The OpenAPI document stays at /openapi.json; the docs UIs are off (they load assets from a CDN).
     app = FastAPI(title=APP_NAME, version=cfg.version, docs_url=None, redoc_url=None)
     # Only our own page may call the API: blocks DNS-rebinding pages that resolve to 127.0.0.1.
@@ -45,7 +49,7 @@ def create_app(cfg: AppConfig, engine_status: EngineStatus, downloads: DownloadS
         return {
             "app_version": cfg.version,
             "engine": {"installed": engine_status.installed, "spotdl_version": engine_status.spotdl_version},
-            "version_notice": None,
+            "version_notice": asdict(release.notice) if release.notice else None,
             "job": downloads.job.to_status() if downloads.job else None,
         }
 
