@@ -42,3 +42,13 @@ Notice each example names exact inputs and exact expected outputs. The `tester` 
 <!-- Add regression tests below. Only include tests that cover critical paths.
      When a scope is marked [DONE], promote its qualifying acceptance criteria here.
      Keep this list small and meaningful — do not dump every scope test in. -->
+
+Promoted from P-0001 (Scopes 1 and 2, 2026-10-16). Automated versions live in `app/tests/` (`./uv run --directory app pytest`, plus `-m integration` for the ones that run the real launcher or spotDL).
+
+- **engine_first_install:** run `Abrir EasySpotDL.command` with an empty data folder and internet → `<datos>/tools` contains spotDL, `spotdl --version` returns `4.x`, deno and ffmpeg are available to spotDL, and the log shows INFO "Engine installed".
+- **engine_tools_on_path:** first launch with `ffmpeg` on PATH (e.g. `/opt/homebrew/bin/ffmpeg`) and no `~/.spotdl/ffmpeg` → the app does not run `spotdl --download-ffmpeg`, still runs `spotdl --download-deno`, and the Engine install succeeds (no `EOFError`, no "No se pudo instalar el Engine").
+- **launch_opens_browser:** run `Abrir EasySpotDL.command` with the data folder already prepared → within 30 s `GET http://127.0.0.1:<port>/` returns 200 with HTML containing "EasySpotDL", and the terminal shows "No cierres esta ventana".
+- **reject_track_url:** paste `https://open.spotify.com/track/69kOkLUCkxIZYexIgSG8rq` → `POST /download` returns 400, the page shows "Pegá el link de una playlist de Spotify", and spotDL is not started.
+- **download_public_playlist:** paste `https://open.spotify.com/playlist/37i9dQZF1EVHGWrwldPRtj?si=abc` and press Descargar → `~/Music/EasySpotDL/<playlist name>/` holds ≥ 90 % of the playlist's songs as `.mp3` with title and artist tags.
+- **notice_channel_unreachable:** Release Channel unreachable → no Version Notice is shown, the app works, and the log shows WARNING "Release Channel check failed".
+- **zip_contents:** run `scripts/build.sh` and list each zip → each holds its launcher, `uv` (mac aarch64) or `uv.exe` (Windows x86_64), `app/`, `VERSION`, `LEEME.txt` and a `.env` with `ENV=prod`; neither holds `ffmpeg`, `deno` or a Python interpreter.
