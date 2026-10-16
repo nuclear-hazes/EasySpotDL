@@ -12,7 +12,7 @@ Status values: `[ ] Not Started`, `[IN PROGRESS]`, `[DONE]`.
 
 <!-- Projects currently being implemented. -->
 
-- [P-0001](P-0001.md) — EasySpotDL — [ ] Not Started — 2026-10-15
+- [P-0001](P-0001.md) — EasySpotDL — [IN PROGRESS] — 2026-10-15
 
 ---
 
