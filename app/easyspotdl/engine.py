@@ -16,7 +16,7 @@ CONNECTIVITY_URL = "https://pypi.org/simple/spotdl/"
 INSTALL_TIMEOUT_S = 600
 UPGRADE_TIMEOUT_S = 180
 EXE = ".exe" if sys.platform == "win32" else ""
-# spotDL's own download commands, keyed by the file each one leaves in ~/.spotdl.
+# spotDL's own download commands, keyed by the file each one leaves in ~/.spotdl (or finds on PATH).
 SPOTDL_TOOLS = {f"ffmpeg{EXE}": "--download-ffmpeg", f"deno{EXE}": "--download-deno"}
 
 
@@ -91,12 +91,13 @@ def ensure_engine(data_dir: Path) -> EngineStatus:
 
 
 def _missing_tools() -> list[str]:
+    # Same check as spotDL: a tool on PATH counts as installed, and spotDL uses it.
     tools_dir = Path.home() / ".spotdl"
-    return [name for name in SPOTDL_TOOLS if not (tools_dir / name).exists()]
+    return [name for name in SPOTDL_TOOLS if not (tools_dir / name).exists() and not shutil.which(name)]
 
 
 def _ensure_tools(spotdl: Path, env: dict[str, str]) -> None:
-    """Download deno and ffmpeg through spotDL when missing (spotDL prompts if they already exist)."""
+    """Download deno and ffmpeg through spotDL when missing (spotDL prompts, and fails, if they already exist)."""
     for name in _missing_tools():
         log.info("Downloading %s for the Engine", name)
         _run([str(spotdl), SPOTDL_TOOLS[name]], env, INSTALL_TIMEOUT_S)
