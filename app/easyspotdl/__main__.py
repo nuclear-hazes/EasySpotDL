@@ -13,7 +13,7 @@ from pathlib import Path
 
 import uvicorn
 
-from . import config, engine, server
+from . import config, download, engine, server
 
 log = logging.getLogger(__name__)
 
@@ -90,7 +90,7 @@ def main() -> int:
         return 0
 
     try:
-        engine.ensure_engine(cfg.data_dir)
+        engine_status = engine.ensure_engine(cfg.data_dir)
     except engine.EngineError as e:
         log.error("%s", e)
         return 1
@@ -99,7 +99,9 @@ def main() -> int:
     port = sock.getsockname()[1]
     instance_file = cfg.data_dir / INSTANCE_FILE
     instance_file.write_text(json.dumps({"port": port, "pid": os.getpid()}))
-    srv = uvicorn.Server(uvicorn.Config(server.create_app(cfg), log_config=None, access_log=False))
+    downloads = download.DownloadService(engine.spotdl_path(cfg.data_dir), cfg.music_dir)
+    app = server.create_app(cfg, engine_status, downloads)
+    srv = uvicorn.Server(uvicorn.Config(app, log_config=None, access_log=False))
     threading.Thread(target=_open_browser_when_started, args=(srv, url_for(port)), daemon=True).start()
     try:
         srv.run(sockets=[sock])

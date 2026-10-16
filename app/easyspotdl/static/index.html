@@ -5,11 +5,160 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>EasySpotDL</title>
   <style>
-    body { font-family: system-ui, sans-serif; max-width: 40rem; margin: 3rem auto; padding: 0 1rem; }
+    :root { --fg: #1d1d1f; --muted: #6e6e73; --line: #d2d2d7; --accent: #1db954; --error: #c62828; --bg: #fff; }
+    @media (prefers-color-scheme: dark) {
+      :root { --fg: #f5f5f7; --muted: #a1a1a6; --line: #424245; --bg: #1c1c1e; }
+    }
+    * { box-sizing: border-box; }
+    body { font: 16px/1.5 system-ui, sans-serif; color: var(--fg); background: var(--bg); max-width: 40rem; margin: 0 auto; padding: 1.5rem 1rem; }
+    header { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid var(--line); padding-bottom: .5rem; margin-bottom: 1.5rem; }
+    header h1 { font-size: 1.4rem; margin: 0; }
+    .muted { color: var(--muted); }
+    label { display: block; font-weight: 600; margin-bottom: .5rem; }
+    input { width: 100%; font: inherit; padding: .7rem .8rem; border: 1px solid var(--line); border-radius: .5rem; background: transparent; color: inherit; }
+    button { font: inherit; font-weight: 600; padding: .7rem 1.4rem; border: 0; border-radius: 2rem; background: var(--accent); color: #fff; cursor: pointer; }
+    button.secondary { background: transparent; color: var(--fg); border: 1px solid var(--line); }
+    button:disabled { opacity: .45; cursor: default; }
+    .actions { display: flex; gap: .75rem; flex-wrap: wrap; margin-top: 1.25rem; }
+    .error { color: var(--error); margin-top: .75rem; }
+    .bar { height: .8rem; border-radius: .4rem; background: var(--line); overflow: hidden; margin: .75rem 0 .25rem; }
+    .bar > div { height: 100%; width: 0; background: var(--accent); transition: width .4s; }
+    .row { display: flex; justify-content: space-between; gap: 1rem; }
+    h2 { font-size: 1.15rem; margin: 0; }
+    ul { padding-left: 1.2rem; }
+    [hidden] { display: none !important; }
   </style>
 </head>
 <body>
-  <h1>EasySpotDL</h1>
-  <p>EasySpotDL está listo.</p>
+  <header>
+    <h1>EasySpotDL</h1>
+    <span class="muted" id="version"></span>
+  </header>
+
+  <!-- Pantalla: inicio -->
+  <section id="screen-start">
+    <p class="error" id="job-error" hidden>No se pudo leer la playlist. Revisá tu conexión y que la playlist sea pública.</p>
+    <form id="form">
+      <label for="url">Pegá el link de una playlist pública de Spotify</label>
+      <input id="url" name="url" type="text" autocomplete="off" placeholder="https://open.spotify.com/playlist/...">
+      <div class="actions"><button id="start" type="submit">Descargar</button></div>
+      <p class="error" id="form-error" hidden></p>
+    </form>
+    <p class="muted">Los MP3 se guardan en: Música/EasySpotDL</p>
+  </section>
+
+  <!-- Pantalla: descargando -->
+  <section id="screen-running" hidden>
+    <h2 id="running-name">Leyendo la playlist…</h2>
+    <div class="bar"><div id="bar-fill"></div></div>
+    <div class="row"><span class="muted" id="current"></span><span id="count"></span></div>
+    <div class="actions"><button type="button" disabled>Descargar</button></div>
+  </section>
+
+  <!-- Pantalla: terminado -->
+  <section id="screen-finished" hidden>
+    <h2 id="finished-name"></h2>
+    <p id="summary"></p>
+    <div id="failed-block" hidden>
+      <p>No se pudieron bajar:</p>
+      <ul id="failed-list"></ul>
+    </div>
+    <div class="actions">
+      <button type="button" id="open-folder">Abrir carpeta</button>
+      <button type="button" class="secondary" id="again">Descargar otra playlist</button>
+    </div>
+  </section>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    let showStart = false;  // "Descargar otra playlist" was pressed after a finished job
+
+    function show(screen) {
+      for (const name of ["start", "running", "finished"]) $("screen-" + name).hidden = name !== screen;
+    }
+
+    function formError(message) {
+      $("form-error").textContent = message || "";
+      $("form-error").hidden = !message;
+    }
+
+    function render(status) {
+      $("version").textContent = "v" + status.app_version;
+      const job = status.job;
+      if (job && job.state === "running") {
+        show("running");
+        $("running-name").textContent = job.playlist_name || "Leyendo la playlist…";
+        $("bar-fill").style.width = job.total ? (100 * job.done / job.total) + "%" : "0";
+        $("count").textContent = job.total ? job.done + " de " + job.total : "";
+        // N reaches M before the automatic retry pass over the failed songs.
+        const retrying = job.total > 0 && job.done >= job.total;
+        const song = job.current_song;
+        $("current").textContent = retrying
+          ? (song ? "Reintentando: " + song : "Reintentando las que fallaron…")
+          : (song ? "Ahora: " + song : "");
+      } else if (job && job.state === "finished" && !showStart) {
+        show("finished");
+        $("finished-name").textContent = job.playlist_name + " — listo";
+        $("summary").textContent = "Descargadas: " + job.downloaded + " · Ya existían: " + job.skipped + " · Fallaron: " + job.failed.length;
+        $("failed-list").replaceChildren(...job.failed.map((song) => {
+          const li = document.createElement("li");
+          li.textContent = song;
+          return li;
+        }));
+        $("failed-block").hidden = job.failed.length === 0;
+      } else {
+        $("job-error").hidden = !(job && job.state === "failed" && !showStart);
+        show("start");
+      }
+    }
+
+    async function refresh() {
+      try {
+        const response = await fetch("/status");
+        if (response.ok) render(await response.json());
+      } catch (e) {
+        // The server is gone (terminal window closed); keep the last screen.
+      }
+    }
+
+    $("form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      formError("");
+      showStart = true;  // a new attempt replaces the last job's message
+      $("job-error").hidden = true;
+      $("start").disabled = true;
+      try {
+        const response = await fetch("/download", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: $("url").value }),
+        });
+        if (response.status === 202) {
+          showStart = false;
+          $("job-error").hidden = true;
+          $("url").value = "";
+          await refresh();
+        } else {
+          formError((await response.json()).detail || "No se pudo empezar la descarga.");
+        }
+      } catch (e) {
+        formError("EasySpotDL no responde. Volvé a abrirlo.");
+      } finally {
+        $("start").disabled = false;
+      }
+    });
+
+    $("again").addEventListener("click", () => {
+      showStart = true;
+      formError("");
+      $("job-error").hidden = true;
+      show("start");
+      $("url").focus();
+    });
+    $("open-folder").addEventListener("click", () => fetch("/open-folder", { method: "POST" }));
+
+    refresh();
+    setInterval(refresh, 2000);
+  </script>
 </body>
 </html>
